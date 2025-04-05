@@ -15,17 +15,36 @@ import acvm from "@noir-lang/acvm_js/web/acvm_js_bg.wasm?url";
 import noirc from "@noir-lang/noirc_abi/web/noirc_abi_wasm_bg.wasm?url";
 await Promise.all([initACVM(fetch(acvm)), initNoirC(fetch(noirc))]);
 
+function stringToReadableStream(str) {
+  return new Response(new TextEncoder().encode(str)).body;
+}
+
 export async function getCircuit() {
-	const fm = createFileManager("/");
-  const main = "/circuit/src/main.nr";
-  const nargoToml = "/circuit/Nargo.toml";
-	const { body } = await fetch(main);
-	const { body: nargoTomlBody } = await fetch(nargoToml);
- 
-	fm.writeFile("./src/main.nr", body);
-	fm.writeFile("./Nargo.toml", nargoTomlBody);
-	return await compile(fm);
- } 
+  const fm = createFileManager("/");
+
+  const mainNr = `
+use std::hash::poseidon2::Poseidon2::hash;
+
+fn main(secret_path: [Field; 3], user_path: [Field; 3], public_hash: pub Field) {
+    for i in 0..3 {
+        assert(secret_path[i] == user_path[i]);
+    }
+
+    assert(hash(secret_path, 3) == public_hash);
+}
+`.trim();
+
+  const nargoToml = `
+[package]
+name = "circuit"
+type = "bin"
+`.trim();
+
+  fm.writeFile("./src/main.nr", stringToReadableStream(mainNr));
+  fm.writeFile("./Nargo.toml", stringToReadableStream(nargoToml));
+
+  return await compile(fm);
+}
 
 // Basic scene setup
 const scene = new THREE.Scene();

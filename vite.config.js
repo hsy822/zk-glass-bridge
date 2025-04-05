@@ -1,4 +1,5 @@
 export default {
+    base: '/games/glass-bridge/',
     publicDir: 'public',
     optimizeDeps: {
       esbuildOptions: {
