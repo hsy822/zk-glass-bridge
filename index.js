@@ -1,12 +1,14 @@
 import { compile, createFileManager } from "@noir-lang/noir_wasm"
-import main from "./circuit/src/main.nr?url";
-import nargoToml from "./circuit/Nargo.toml?url";
 
 import { UltraHonkBackend, BarretenbergSync } from '@aztec/bb.js';
 import { Noir } from '@noir-lang/noir_js';
 import { poseidon2HashAsync } from "@zkpassport/poseidon2";
 
-// WASM 초기화
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { gsap } from 'https://cdn.jsdelivr.net/npm/gsap@3.12.5/index.js';
+
+// WASM
 import initNoirC from "@noir-lang/noirc_abi";
 import initACVM from "@noir-lang/acvm_js";
 import acvm from "@noir-lang/acvm_js/web/acvm_js_bg.wasm?url";
@@ -15,6 +17,8 @@ await Promise.all([initACVM(fetch(acvm)), initNoirC(fetch(noirc))]);
 
 export async function getCircuit() {
 	const fm = createFileManager("/");
+  const main = "/circuit/src/main.nr";
+  const nargoToml = "/circuit/Nargo.toml";
 	const { body } = await fetch(main);
 	const { body: nargoTomlBody } = await fetch(nargoToml);
  
@@ -22,38 +26,6 @@ export async function getCircuit() {
 	fm.writeFile("./Nargo.toml", nargoTomlBody);
 	return await compile(fm);
  } 
-
-const show = (id, content) => {
-	const container = document.getElementById(id);
-	container.appendChild(document.createTextNode(content));
-	container.appendChild(document.createElement("br"));
-};
-   
-// document.getElementById("submit").addEventListener("click", async () => {
-// 	try {
-// 		const { program } = await getCircuit();
-// 		const noir = new Noir(program);
-// 		const backend = new UltraHonkBackend(program.bytecode);
-
-// 		const age = document.getElementById("age").value;
-// 		show("logs", "Generating witness... ⏳");
-// 		const { witness } = await noir.execute({ age });
-// 		show("logs", "Generated witness... ✅");
-
-// 		show("logs", "Generating proof... ⏳");
-// 		const proof = await backend.generateProof(witness);
-// 		show("logs", "Generated proof... ✅");
-// 		show("results", proof.proof);
-
-// 	} catch {
-// 		show("logs", "Oh 💔");
-// 	}
-// });
-   
-
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { gsap } from 'https://cdn.jsdelivr.net/npm/gsap@3.12.5/index.js';
 
 // Basic scene setup
 const scene = new THREE.Scene();
@@ -115,7 +87,7 @@ scene.add(startPlatform);
 const tileSize = 1;
 const tileGap = 1.5;
 const tileOffset = 0.8;
-const numTiles = 1;
+const numTiles = 3;
 const tiles = [];
 
 // To create proof
@@ -254,16 +226,19 @@ window.addEventListener("click", (event) => {
 									};
 
 									const { witness } = await noir.execute(noirInputs);
-									const proof = await backend.generateProof(witness);
+									const { proof, publicInputs } = await backend.generateProof(witness)
 
                   document.getElementById("copy-buttons").style.display = "flex";
 
                   document.getElementById("copy-proof").addEventListener("click", async () => {
-                    const hexProof = toHex(proof.proof); 
+                    const hexProof = toHex(proof); 
                     await navigator.clipboard.writeText(hexProof);
-                    alert("✅ Proof copied in Remix format!");
+                    alert("✅ Proof copied!");
                   });
                   
+                  // const verified = await backend.verifyProof({ proof, publicInputs })
+                  // console.log(verified)
+
                   // document.getElementById("copy-sol").addEventListener("click", async () => {
                   //   const solCode = await fetch("/circuit/verify.sol").then(r => r.text());
                   //   await navigator.clipboard.writeText(solCode);
