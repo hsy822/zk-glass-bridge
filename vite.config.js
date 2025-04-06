@@ -9,6 +9,13 @@ export default {
     },
     build: {
       target: "esnext",
+      rollupOptions: {
+        output: {
+          entryFileNames: 'bridge-[name].js',
+          chunkFileNames: 'bridge-[name].js',
+          assetFileNames: 'bridge-[name].[ext]'
+        }
+      }
     },
   };
   
