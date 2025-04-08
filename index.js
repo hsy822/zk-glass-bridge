@@ -304,8 +304,9 @@ window.addEventListener("click", async (event) => {
             };
 
             const { witness } = await noir.execute(noirInputs);
-            const { proof } = await backend.generateProof(witness);
-
+            // check version of zkdev verifier and here and backend bb.js
+            const { proof } = await backend.generateProof(witness, {keccak: true});
+            
             document.getElementById("copy-buttons").style.display = "flex";
             document.getElementById("copy-proof").addEventListener("click", async () => {
               await navigator.clipboard.writeText(toHex(proof));
