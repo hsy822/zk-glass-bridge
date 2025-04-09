@@ -312,6 +312,11 @@ window.addEventListener("click", async (event) => {
               await navigator.clipboard.writeText(toHex(proof));
               alert("✅ Proof copied!");
             });
+            document.getElementById("copy-sol").addEventListener("click", async () => {
+                const solCode = await fetch("/games/glass-bridge/circuit/Verify.sol").then(r => r.text());
+                await navigator.clipboard.writeText(solCode);
+                alert("✅ Verifier copied!");
+              });
           } catch (e) {
             console.error(e);
           }
